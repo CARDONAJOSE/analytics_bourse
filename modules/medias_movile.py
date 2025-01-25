@@ -2,19 +2,27 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
-data = st.session_state.data
-
 # Función para graficar las medias móviles
 def plot_moving_averages(data, selected_moving_averages):
     """
-    Graphique des medias mouvantes pour un ticker
+    Graphique des medias mouvantes pour un ticker.
 
     Parámetros:
         data (pd.DataFrame): DataFrame con las columnas 'Date', 'Close', 'SMA_50', 'SMA_100', 'SMA_200'.
         selected_moving_averages (str): Opción seleccionada en el selectbox.
     """
-    
+    # Verificar si los datos están disponibles
+    if data is None or data.empty:
+        st.warning("No hay datos disponibles para graficar.")
+        return
+
+    # Verificar si las columnas necesarias están presentes
+    required_columns = ["Close", "SMA_50", "SMA_100", "SMA_200"]
+    if not all(col in data.columns for col in required_columns):
+        st.error("Las columnas necesarias no están presentes en los datos.")
+        return
+
+    # Crear la gráfica
     plt.figure(figsize=(12, 6))
     
     # Graficar el precio de cierre
@@ -29,14 +37,12 @@ def plot_moving_averages(data, selected_moving_averages):
         plt.plot(data.index, data["SMA_200"], label="SMA 200", color="red")
     
     # Configuración de la gráfica
-    plt.title("ticket CAC 40 - Medias Móviles")
-    plt.xlabel("date")
+    plt.title("Ticket CAC 40 - Medias Móviles")
+    plt.xlabel("Date")
     plt.ylabel("Prix")
     plt.grid(True)
     plt.legend()
     
     # Mostrar la gráfica en Streamlit
     st.pyplot(plt)
-
-
 

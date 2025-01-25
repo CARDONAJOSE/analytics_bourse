@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import streamlit as st
 
+if "data" not in st.session_state:
+    st.session_state.data = None
+    
 def graph(mean_volume, median_volume, q75_volume, ticker):
     try:
         data = st.session_state.data
