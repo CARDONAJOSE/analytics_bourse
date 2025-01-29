@@ -23,6 +23,11 @@ pip install -r requirements.txt
 deactivate
 ```
 
+## streamlit run
+'''bash
+streamlit run app.py
+'''
+
 ## Contribuer
 Si vous souhaitez contribuer à ce projet, n'hésitez pas à soumettre une demande de tirage ou à ouvrir un problème.
 
