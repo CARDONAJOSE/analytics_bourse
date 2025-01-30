@@ -1,15 +1,17 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import pandas as pd
+import plotly.graph_objects as go
 
-# Función para graficar las medias móviles
+
+
 def plot_moving_averages(data, selected_moving_averages):
     """
     Graphique des medias mouvantes pour un ticker.
 
     Parámetros:
         data (pd.DataFrame): DataFrame con las columnas 'Date', 'Close', 'SMA_50', 'SMA_100', 'SMA_200'.
-        selected_moving_averages (str): Opción seleccionada en el selectbox.
+        selected_moving_averages (list): Lista de opciones seleccionadas.
     """
     # Verificar si los datos están disponibles
     if data is None or data.empty:
@@ -17,7 +19,7 @@ def plot_moving_averages(data, selected_moving_averages):
         return
 
     # Verificar si las columnas necesarias están presentes
-    required_columns = ["Close", "SMA_50", "SMA_100", "SMA_200"]
+    required_columns = ["Close", "SMA_8", "SMA_21", "SMA_50", "SMA_100", "SMA_200", "EMA_8", "EMA_21", "EMA_50", "EMA_100", "EMA_200"]
     if not all(col in data.columns for col in required_columns):
         st.error("Las columnas necesarias no están presentes en los datos.")
         return
@@ -29,15 +31,12 @@ def plot_moving_averages(data, selected_moving_averages):
     plt.plot(data.index, data["Close"], label="Close", color="blue")
     
     # Graficar las medias móviles seleccionadas
-    if selected_moving_averages == "SMA 50" or selected_moving_averages == "Todas":
-        plt.plot(data.index, data["SMA_50"], label="SMA 50", color="orange")
-    if selected_moving_averages == "SMA 100" or selected_moving_averages == "Todas":
-        plt.plot(data.index, data["SMA_100"], label="SMA 100", color="green")
-    if selected_moving_averages == "SMA 200" or selected_moving_averages == "Todas":
-        plt.plot(data.index, data["SMA_200"], label="SMA 200", color="red")
+    for ma in selected_moving_averages:
+        if ma in data.columns:
+            plt.plot(data.index, data[ma], label=ma)
     
     # Configuración de la gráfica
-    plt.title("Ticket CAC 40 - Medias Móviles")
+    plt.title("Ticket CAC - Medias Móviles")
     plt.xlabel("Date")
     plt.ylabel("Prix")
     plt.grid(True)
@@ -46,3 +45,57 @@ def plot_moving_averages(data, selected_moving_averages):
     # Mostrar la gráfica en Streamlit
     st.pyplot(plt)
 
+
+def plot_buji_moving_averages(data, selected_moving_averages, ticker):
+    """
+    Graphique des medias mouvantes pour un ticker.
+
+    Parámetros:
+        data (pd.DataFrame): DataFrame con las columnas 'Date', 'Close', 'SMA_50', 'SMA_100', 'SMA_200'.
+        selected_moving_averages (list): Lista de opciones seleccionadas.
+    """
+    # Verificar si los datos están disponibles
+    if data is None or data.empty:
+        st.warning("No hay datos disponibles para graficar.")
+        return
+
+    # Verificar si las columnas necesarias están presentes
+    required_columns = ["Close", "SMA_8", "SMA_21", "SMA_50", "SMA_100", "SMA_200", "EMA_8", "EMA_21", "EMA_50", "EMA_100", "EMA_200"]
+    if not all(col in data.columns for col in required_columns):
+        st.error("Las columnas necesarias no están presentes en los datos.")
+        return
+
+    # Crear la gráfica
+    fig = go.Figure()
+
+    
+    fig.add_trace(go.Candlestick(
+    x=data.index,
+    open=data['Open'],
+    high=data['High'],
+    low=data['Low'],
+    close=data['Close'],
+    name="Precio",
+    ))
+   
+    # Graficar las medias móviles seleccionadas
+    for ma in selected_moving_averages:
+        if ma in data.columns:
+            fig.add_trace(go.Scatter(
+                x=data.index,
+                y=data[ma],
+                mode='lines',
+                name=ma
+            ))
+    
+   # Agregar títulos y etiquetas
+    fig.update_layout(
+    title=f'Gráfico de velas japonesas de {ticker} ',
+    xaxis_title='date',
+    yaxis_title='Pix',
+    xaxis_rangeslider_visible=False,
+    template="plotly_dark"
+    )
+
+# Mostrar en Streamlit
+    st.plotly_chart(fig)

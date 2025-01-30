@@ -6,8 +6,12 @@ import pandas as pd
 import numpy as np
 import warnings
 from modules.theme import apply_theme
-from modules.graphique import graph, plot_calendar
-from modules.medias_movile import plot_moving_averages
+from modules.graphique import graph, plot_calendar, graphique_volumen
+from modules.medias_movile import plot_moving_averages, plot_buji_moving_averages
+import mplfinance as mpf
+import plotly.graph_objects as go
+
+
 
 # Ignorar advertencias
 warnings.filterwarnings("ignore")
@@ -33,6 +37,7 @@ apply_theme(theme)
 # Entradas del usuario en la barra lateral
 st.sidebar.header("Paramètres de données")
 ticker = st.sidebar.text_input("Introduit le ticker (exemple: AAPL):")
+frequency = st.sidebar.selectbox("Frequênce", ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y"])
 start_date = st.sidebar.text_input("Insert la date de debut (format YYYY-MM-DD):")
 end_date = st.sidebar.text_input("Insert la date de fin (format YYYY-MM-DD):")
 
@@ -45,7 +50,7 @@ if st.sidebar.button("Buscar"):
             datetime.strptime(end_date, "%Y-%m-%d")
 
             # Obtener los datos históricos
-            data = yf.Ticker(ticker).history(start=start_date, end=end_date)
+            data = yf.Ticker(ticker).history(start=start_date, end=end_date, interval=frequency)
             st.session_state.data = data  # Guardar los datos en session_state
             
             if data is not None and not data.empty:
@@ -65,12 +70,16 @@ if "data" in st.session_state and st.session_state.data is not None:
 
     # calculer la fiference de prix par jour
     data['dif_jour'] = data['Open'] - data['Close']
+    
+    # montre le statistique de prix
+    st.header("📊 Statistiques des Prix et du Volume")
 
-    # Mostrar estadísticas de volumen
-    st.header("Statistiques de volume")
-    mean_volume = data['Volume'].mean()
-    median_volume = data['Volume'].median()
-    q75_volume = data['Volume'].quantile(0.75)
+    st.write(f"**Prix d'ouverture moyen:** {data['Open'].mean():.2f}")
+    st.write(f"**Prix de clôture moyen:** {data['Close'].mean():.2f}")
+    st.write(f"**Prix le plus haut moyen:** {data['High'].mean():.2f}")
+    st.write(f"**Prix le plus bas moyen:** {data['Low'].mean():.2f}")
+    st.write(f"**Volume moyen des transactions:** {data['Volume'].mean():,.0f}")
+
 
     ## medias mobiles simple
     data["SMA_50"] = data["Close"].rolling(window=50).mean()
@@ -79,56 +88,85 @@ if "data" in st.session_state and st.session_state.data is not None:
     data["SMA_100"] = data["Close"].rolling(window=100).mean()
     data["SMA_200"] = data["Close"].rolling(window=200).mean()
 
-    # medias moviles exponenciel
+    # medias mobiles exponenciel
     data["EMA_8"] = data["Close"].ewm(span=8, adjust=False).mean()
     data["EMA_21"] = data["Close"].ewm(span=21, adjust=False).mean()
     data["EMA_50"] = data["Close"].ewm(span=50, adjust=False).mean()
     data["EMA_100"] = data["Close"].ewm(span=100, adjust=False).mean()
     data["EMA_200"] = data["Close"].ewm(span=200, adjust=False).mean()
 
-    st.write(f"Volume moyen: {mean_volume:.2f}")
-    st.write(f"Médiane du volume: {median_volume:.2f}")
-    st.write(f"75e percentile du volume: {q75_volume:.2f}")
+    st.header("📉 Graphique de volatilité")
+    data["Volatilité"] = data["High"] - data["Low"]
+    st.write(f"**Volatilité moyenne:** {data['Volatilité'].mean():.2f}")
+    st.line_chart(data["Volatilité"])
 
-    # Gráfico de volumen
+
+    st.dataframe(data)
+
+    # Gráphique de volumen
     st.header("Graphique de volume")
-    graph(mean_volume, median_volume, q75_volume, ticker)
+    
+    graphique_volumen(data, ticker)
 
     # Gráfiques des moyeennes mobiles
     st.header("Graphique des moyennes mobiles")
 
-    selected_moving=st.pills("moving averages simples", ["SMA 50", "SMA 100", "SMA 200"])
-    # exampl= st.radio("moving averages ", ["SMA 8", "SMA 21","SMA 50", "SMA 100", "SMA 200","EMA 8", "EMA 21", "EMA 50", "EMA 100", "EMA 200"])
-    
+    # Seleccioner les moyennes móbiles
     col1, col2 = st.columns(2, vertical_alignment="bottom")
     with col1:
-        st.checkbox("SMA 8")
-        st.checkbox("SMA 21")
-        st.checkbox("SMA 50")
-        st.checkbox("SMA 100")
-        st.checkbox("SMA 200")
+        st.subheader("Moyennes mobiles simples")
+        sma_8=st.checkbox("SMA_8")
+        sma_21=st.checkbox("SMA_21")
+        sma_50=st.checkbox("SMA_50")
+        sma_100=st.checkbox("SMA_100")
+        sma_200=st.checkbox("SMA_200")
     with col2:
-        st.checkbox("EMA 8")        
-        st.checkbox("EMA 21")
-        st.checkbox("EMA 50")
-        st.checkbox("EMA 100")
-        st.checkbox("EMA 200")
+        st.subheader("Moyennes mobiles expon")
+        ema_8= st.checkbox("EMA_8")        
+        ema_21= st.checkbox("EMA_21")
+        ema_50= st.checkbox("EMA_50")
+        ema_100= st.checkbox("EMA_100")
+        ema_200= st.checkbox("EMA_200")
 
+    selected_moving_averages = []
 
+    # Agregar las medias móviles seleccionadas a la lista
+    if sma_8:
+        selected_moving_averages.append("SMA_8")
+    if sma_21:
+        selected_moving_averages.append("SMA_21")
+    if sma_50:
+        selected_moving_averages.append("SMA_50")
+    if sma_100:
+        selected_moving_averages.append("SMA_100")
+    if sma_200:
+        selected_moving_averages.append("SMA_200")
+    if ema_8:
+        selected_moving_averages.append("EMA_8")
+    if ema_21:
+        selected_moving_averages.append("EMA_21")
+    if ema_50:
+        selected_moving_averages.append("EMA_50")
+    if ema_100:
+        selected_moving_averages.append("EMA_100")
+    if ema_200:
+        selected_moving_averages.append("EMA_200")
+    #graphique des moyennes mobiles
+    plot_buji_moving_averages(data, selected_moving_averages, ticker)
 
-    selected_moving_averages = st.selectbox(
-        "Selecciona las medias móviles a visualizar:",
-        options=["SMA 50", "SMA 100", "SMA 200", "Todas"],
-        index=3,  # "Todas" seleccionada por defecto
-    )
-
-    plot_moving_averages(data, selected_moving_averages)
+    # plot_moving_averages(data, selected_moving_averages)
 
     # Ajustes previos a las funciones
     st.header("Graphique de calendrier")     
     st.write("graphique de calendrier qui representa de jour positif ou negative dans un periode de temps")  # Mostrar tabla
     plot_calendar(data)  # Graphique le calendrier
-        
+
+
+
+
+
+
+
 
 
 
