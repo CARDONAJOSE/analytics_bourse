@@ -1,12 +1,9 @@
 import matplotlib.pyplot as plt
-import matplotlib.colors as mcolors
-
 import streamlit as st
 import calplot
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-import plotly.io as pio
 
 if "data" not in st.session_state:
     st.session_state.data = None
@@ -27,65 +24,76 @@ def graph(mean_volume, median_volume, q75_volume, ticker):
         st.error(f"Erreur dans la graphique: {e}")
 
 
-def plot_calendar(data):
+def plot_calendar(data, ticker, vmin=-4, vmax=4):
     try:
-        if not isinstance(data.index, pd.DatetimeIndex):
+        if not isinstance(data.index, pd.DatetimeIndex ):
             
             raise ValueError("El índice de los datos no es un DatetimeIndex.")
         # Validar que no haya valores nulos o no válidos
         data.index = data.index.tz_localize(None)
         
+        data['dif_jour'] = pd.to_numeric(data['dif_jour'], errors='coerce')
+
         # Graficar usando el DataFrame con índice de fecha
         calplot.calplot(
             data['dif_jour'],
             cmap='RdYlGn',
-            vmin=-2, vmax=2,
+            vmin= vmin, 
+            vmax= vmax,
             linewidth=1,
-            suptitle='Calendrier',
-            suptitle_kws={'x': 0.5, 'y': 1.0, 'ha': 'center'},
+            suptitle=f'Calendrier de {ticker}',
+            suptitle_kws={'x': 0.5, 'y': 1.05, 'ha': 'center'},
             daylabels=['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
         )
         st.pyplot(plt.gcf())
     except Exception as e:
-        st.error(f"Error en la generación del gráfico: {e}")
+        st.error(f"Erreur dans la graphique: {e}")
 
 def graphique_volumen(data, ticker):
 
     try:
+        #calculer la moyenne de volume
         vol_media = data['Volume'].mean()
 
+        st.write(f"**Volatilité moyenne:** {vol_media:.2f}")
 
-        # Determinar el color de las barras: verde si el cierre sube, rojo si baja
+        # determine la coleur de la barre: vert si le prix augmente, rouge si baisse
         colors = ['green' if close_today > close_yesterday else 'red' 
           for close_today, close_yesterday in zip(data['Close'], data['Close'].shift(1))]
 
-        # Crear gráfico de volumen con colores personalizados
+        #creer le graphique du volume 
         fig = go.Figure()
 
-        # Agregar barras de volumen
+        #ajouter la barre de volume
         fig.add_trace(go.Bar(
         x=data.index, 
         y=data['Volume'], 
         name='Volume',
-        marker_color=colors,  # Asignar colores rojo/verde
-        opacity=0.6
+        marker_color=colors, 
+        opacity=1
         ))
 
-        # Agregar línea de media móvil de volumen
+        # ajoute linea de media mobile
         fig.add_trace(go.Scatter(
         x=data.index, 
         y=[vol_media]*len(data), 
         mode='lines', 
         name='Moyenne', 
-        line=dict(color='black', width=2)
+        line=dict(color='black', width=1)
         ))
 
-        # Configurar diseño del gráfico
+        # Configurer la graphique
         fig.update_layout(
-        title=f'Volumen de transactions {ticker}',
-        xaxis_title='date',
-        yaxis_title='Volumen',
-        template="plotly_dark",
+        title={
+            'text':f'Volume des transactions {ticker}',
+            'x': 0.5,  # Centrar el título
+            'xanchor': 'center'},
+        xaxis_title='Date',
+        yaxis_title='Volume',
+        yaxis=dict(
+            side='right'
+        ),
+        template="ggplot2",
         xaxis=dict(
         rangeslider=dict(visible=True),  
         type="date"
@@ -93,7 +101,52 @@ def graphique_volumen(data, ticker):
         legend=dict(x=0, y=1)
         )
 
-        # Mostrar gráfico
+        # Mostrer gráphique
         st.plotly_chart(fig)
     except Exception as e:
         st.error(f"Erreur dans la graphique: {e}")
+
+
+# Calcular la volatilidad
+def plot_volatilite(data, ticker):
+
+    try:
+        # Mostrar la volatilidad media
+        st.write(f"**Volatilité moyenne:** {data['Volatilité'].mean():.2f}")
+
+        # Crear un gráfico de línea con plotly
+        fig = go.Figure()
+
+        # Agregar la línea de volatilidad
+        fig.add_trace(go.Scatter(
+        x=data.index,
+        y=data["Volatilité"],
+        mode='lines',
+        name='Volatilité'
+        ))
+        fig.add_trace(go.Scatter(
+        x=data.index, 
+        y=[data['Volatilité'].mean()]*len(data), 
+        mode='lines', 
+        name='Moyenne', 
+        line=dict(color='black', width=1)
+        ))
+
+    # Configurar el diseño del gráfico
+        fig.update_layout(
+            title={
+            'text':f'Volatilité de {ticker}',
+            'x': 0.5,  # Centrar el título
+            'xanchor': 'center'},
+            xaxis_title='Date',
+            yaxis_title='Volatilité',
+            yaxis=dict(
+            side='right'  # Mover el eje y al lado derecho
+            ),
+            template="ggplot2"
+        )
+    except Exception as e:
+        st.error(f"Erreur dans la graphique: {e}")
+
+# Mostrar el gráfico en Streamlit
+    st.plotly_chart(fig)

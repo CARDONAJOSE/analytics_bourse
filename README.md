@@ -1,3 +1,28 @@
+# Tableau de Bord Financier
+
+Ce projet est une application Streamlit pour analyser les données financières en utilisant la bibliothèque `yfinance`. L'application permet aux utilisateurs de rechercher des informations sur les actions, de visualiser des statistiques de prix et de volumes, et de générer des graphiques interactifs.
+
+## Caractéristiques
+
+- **Recherche de Tickers** : Permet de rechercher des informations détaillées sur les actions en utilisant leur symbole de ticker.
+- **Statistiques de Prix et de Volumes** : Affiche des statistiques telles que le prix d'ouverture, de clôture, le maximum, le minimum et le volume moyen des transactions.
+- **Graphiques Interactifs** : Génère des graphiques de lignes et de volumes en utilisant `plotly` et `calplot`.
+- **Informations Supplémentaires** : Affiche des informations supplémentaires telles que le beta, le secteur et l'industrie de l'entreprise.
+
+
+# structure du projet
+``` bash
+financial-dashboard/
+│
+├── app.py                  # Fichier principal de l'application Streamlit
+├── requirements.txt        # Liste des dépendances du projet
+├── README.md               # Documentation du projet
+└── modules/                # Répertoire pour les modules supplémentaires
+    ├── __init__.py         # Fichier pour convertir le répertoire en paquet
+    ├── graphique.py        # Module pour les fonctions de graphiques
+    └── utils.py            # Module pour les fonctions utilitaires
+```
+
 ## Virtual environnement
 ```bash
 python -m venv .venv

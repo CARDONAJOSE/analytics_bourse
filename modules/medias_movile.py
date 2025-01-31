@@ -90,9 +90,16 @@ def plot_buji_moving_averages(data, selected_moving_averages, ticker):
     
    # Agregar títulos y etiquetas
     fig.update_layout(
-    title=f'Gráfico de velas japonesas de {ticker} ',
-    xaxis_title='date',
-    yaxis_title='Pix',
+    title={
+            'text':f'Grapique de {ticker}',
+            'x': 0.5,  # Centrar el título
+            'xanchor': 'center'
+            },
+    xaxis_title='Date',
+    yaxis_title='Prix',
+    yaxis=dict(
+            side='right'
+        ),
     xaxis_rangeslider_visible=False,
     template="plotly_dark"
     )
