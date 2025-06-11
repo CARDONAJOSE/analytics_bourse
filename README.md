@@ -33,10 +33,6 @@ python -m venv .venv
 - **mac/linux**: `source .venv/bin/activate.fish`
 - **windows**: `.venv/Scripts/activate` ou `.venv/Scripts/activate.ps1`
 
-## Créer requirements.txt à partir de pip
-```bash
-pip freeze > requirements.txt
-```
 
 ## Installer les librairies dans un nouvel environnement
 ```bash
@@ -47,11 +43,30 @@ pip install -r requirements.txt
 ```bash
 deactivate
 ```
+### Installation
 
-## streamlit run
-'''bash
-streamlit run app.py
-'''
+1. **Cloner le dépôt**:
+   ```bash
+   git clone https://github.com/CARDONAJOSE/analytics_bourse.git
+   cd pdf-summary-app
+2. **Lancement de l’application web sans docker** :  
+   - Démarrez l’application :  
+     ```bash
+     streamlit run app.py
+     ```
+   - Rendez-vous sur `http://localhost:5000` (par défaut) pour interagir avec l’interface.
+
+3. **Lancement de l’application web avec docker** :  
+   - Démarrez l’application :  
+     ```bash
+     docker compose up --build -d
+     ```
+   - Rendez-vous sur `http://localhost:8501` (par défaut) pour interagir avec l’interface.
+
+- arrete docker
+    ```bash
+    docker compose down
+    ```
 
 ## Contribuer
 Si vous souhaitez contribuer à ce projet, n'hésitez pas à soumettre une demande de tirage ou à ouvrir un problème.
